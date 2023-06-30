@@ -1,0 +1,5 @@
+*.exe
+*.yy.c
+*.tab.c
+*.tab.h
+TODO.md
