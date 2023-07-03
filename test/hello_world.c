@@ -4,19 +4,23 @@ int main()
 {
 	printf("Hello, World\n");
 
-	do
-		printf("Do test\n");
-	while (0);
+	int a;
+	int b;
+	int c;
+    
+	a = 1;
+	b = 2;
+	c = 3;
 
-	for (int abc; 5; printf("Infinite loop\n"))
-		return 1;
+	a = -1 + 10;
+	b = (a)?0:1;
+	c = (a << c) + 14 * 1;
+	b += 2;
+	c >>= b;
 
-	while (1)
-	{
-		printf("Infinite loop\n");
-
-		return 0;
-	}
+    printf("%d\n", a);
+    printf("%d\n", b);
+    printf("%d\n", c);
 
 	return 0;
 }

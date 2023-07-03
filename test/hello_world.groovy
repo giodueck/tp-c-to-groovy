@@ -3,19 +3,23 @@ static void main(String[] args)
 {
         println("Hello, World\n")
 
-        do
-                {println("Do test\n")}
-         while (0)
+        int a
+        int b
+        int c
 
-        for (int abc; 5; println("Infinite loop\n"))
-                {return 1}
+        a = 1
+        b = 2
+        c = 3
 
-        while (1)
-        {
-                println("Infinite loop\n")
+        a = -1 + 10
+        b = (a) ? 0 : 1
+        c = (a << c) + 14 * 1
+        b += 2
+        c >>= b
 
-                return 0
-        }
+        println("" + a)
+        println("" + b)
+        println("" + c)
 
         return 0
 }

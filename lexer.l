@@ -43,12 +43,46 @@ string  \"(\\.|[^"\\])*\"
 "]"             { return CLB; }
 ";"             { return ENDS; }
 
-"<="            { return LE; }
-">="            { return GE; }
-"<"             { return LT; }
-">"             { return GT; }
-"=="            { return EQ; }
-"!="            { return NE; }
+"<="            { yylval.str = strdup(yytext); return LE; }
+">="            { yylval.str = strdup(yytext); return GE; }
+"<"             { yylval.str = strdup(yytext); return LT; }
+">"             { yylval.str = strdup(yytext); return GT; }
+"=="            { yylval.str = strdup(yytext); return EQ; }
+"!="            { yylval.str = strdup(yytext); return NE; }
+
+"+"             { yylval.str = strdup(yytext); return PLUS; }
+"-"             { yylval.str = strdup(yytext); return MINUS; }
+"*"             { yylval.str = strdup(yytext); return ASTERISK; }
+"/"             { yylval.str = strdup(yytext); return SLASH; }
+"%"             { yylval.str = strdup(yytext); return PERCENT; }
+"++"            { yylval.str = strdup(yytext); return INCREMENT; }
+"--"            { yylval.str = strdup(yytext); return DECREMENT; }
+"&"             { yylval.str = strdup(yytext); return AMPERSAND; }
+"|"             { yylval.str = strdup(yytext); return PIPE; }
+"^"             { yylval.str = strdup(yytext); return CARET; }
+"~"             { yylval.str = strdup(yytext); return NEGATION; }
+"<<"            { yylval.str = strdup(yytext); return SHIFT_LEFT; }
+">>"            { yylval.str = strdup(yytext); return SHIFT_RIGHT; }
+
+"="             { yylval.str = strdup(yytext); return ASSIGN; }
+"+="            { yylval.str = strdup(yytext); return PLUS_ASSIGN; }
+"-="            { yylval.str = strdup(yytext); return MINUS_ASSIGN; }
+"*="            { yylval.str = strdup(yytext); return ASTERISK_ASSIGN; }
+"/="            { yylval.str = strdup(yytext); return SLASH_ASSIGN; }
+"%="            { yylval.str = strdup(yytext); return PERCENT_ASSIGN; }
+"&="            { yylval.str = strdup(yytext); return AMPERSAND_ASSIGN; }
+"|="            { yylval.str = strdup(yytext); return PIPE_ASSIGN; }
+"^="            { yylval.str = strdup(yytext); return CARET_ASSIGN; }
+"~="            { yylval.str = strdup(yytext); return NEGATION_ASSIGN; }
+"<<="           { yylval.str = strdup(yytext); return SHIFT_LEFT_ASSIGN; }
+">>="           { yylval.str = strdup(yytext); return SHIFT_RIGHT_ASSIGN; }
+
+"&&"            { yylval.str = strdup(yytext); return AND; }
+"||"            { yylval.str = strdup(yytext); return OR; }
+"!"             { yylval.str = strdup(yytext); return NOT; }
+
+"?"             { yylval.str = strdup(yytext); return QUESTION; }
+":"             { yylval.str = strdup(yytext); return COLON; }
 
 {id}            { yylval.str = strdup(yytext); return IDENTIFIER; }
 {integer}       { yylval.str = strdup(yytext); return LIT_INT; }
