@@ -28,6 +28,10 @@ string  \"(\\.|[^"\\])*\"
 "return"        { return RETURN; }
 "printf"        { return PRINTF; }
 
+"while"         { return WHILE; }
+"do"            { return DO; }
+"for"           { return FOR; }
+
 "int"           { return INT; }
 "void"          { return VOID; }
 

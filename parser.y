@@ -55,7 +55,7 @@ global_scope
 ;
 
 function_body
-:   OPCB { printf("{"); indent++; } statement_sequence CLCB { printf("}"); }
+:   OPCB { printf("{"); } statement_sequence CLCB { printf("}"); }
 ;
 
 statement_sequence
@@ -64,8 +64,41 @@ statement_sequence
 ;
 
 statement
-:   RETURN LIT_INT ENDS { printf("return %d;", atoi($2)); }
-|   PRINTF OPP LIT_STRING CLP ENDS { printf("println(%s);", $3); }
+:   statement_no_end ENDS
+|   ENDS
+|   loop
+;
+
+statement_no_end
+:   RETURN LIT_INT { printf("return %s", $2); }
+|   PRINTF OPP LIT_STRING CLP { printf("println(%s)", $3); }
+|   do_loop
+;
+
+loop
+:   WHILE { printf("while "); } condition block
+|   FOR OPP { printf("for ("); } variable_declaration ENDS { printf("; "); } logic_expression ENDS { printf("; "); } statement_no_end CLP { printf(")"); } block
+;
+
+do_loop
+:   DO { printf("do "); } block WHILE { printf(" while "); } condition
+;
+
+block
+:   { printf("{"); } statement { printf("}"); }
+|   OPCB { printf("{"); } statement_sequence CLCB { printf("}"); }
+;
+
+condition
+:   OPP { printf("("); } logic_expression CLP { printf(")"); }
+;
+
+logic_expression
+:   LIT_INT { printf("%s", $1); }
+;
+
+variable_declaration
+:   INT IDENTIFIER { printf("int %s", $2); }
 ;
 
 /* PREPROCESSOR */
