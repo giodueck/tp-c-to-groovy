@@ -13,6 +13,7 @@ id      [a-zA-Z_][a-zA-Z_0-9]*
 integer [+-]?[0-9]+
 double  [+-]?[0-9]+(\.[0-9]*)?([eE][+-]?[0-9]+)?
 string  \"(\\.|[^"\\])*\"
+char    '[^']'
 
 %%
 
@@ -34,6 +35,18 @@ string  \"(\\.|[^"\\])*\"
 
 "int"           { return INT; }
 "void"          { return VOID; }
+"char"          { return CHAR; }
+"const"         { return CONST; }
+"float"         { return FLOAT; }
+"long"          { return LONG; }
+"short"         { return SHORT; }
+"static"        { return STATIC; }
+"struct"        { return STRUCT; }
+"unsigned"      { return UNSIGNED; }
+"double"        { return DOUBLE; }
+"volatile"      { return VOLATILE; }
+"extern"        { return EXTERN; }
+"bool"          { return BOOL; }
 
 "("             { return OPP; }
 ")"             { return CLP; }
@@ -88,5 +101,6 @@ string  \"(\\.|[^"\\])*\"
 {integer}       { yylval.str = strdup(yytext); return LIT_INT; }
 {double}        { yylval.str = strdup(yytext); return LIT_DOUBLE; }
 {string}        { yylval.str = strdup(yytext); return LIT_STRING; }
+{char}          { yylval.str = strdup(yytext); return LIT_CHAR; }
 
 %%

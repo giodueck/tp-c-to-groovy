@@ -16,12 +16,12 @@ extern int indentsize;
     char *str;
 }
 
-%token<str> IDENTIFIER LIT_INT LIT_DOUBLE LIT_STRING
+%token<str> IDENTIFIER LIT_INT LIT_DOUBLE LIT_STRING LIT_CHAR
 
 %token HASH PP_INCLUDE STDIO_H
 %token PRINTF 
 
-%token INT DOUBLE CHAR VOID CONST LONG SHORT SIGNED UNSIGNED STATIC VOLATILE FLOAT EXTERN
+%token INT DOUBLE CHAR VOID CONST LONG SHORT SIGNED UNSIGNED STATIC VOLATILE FLOAT EXTERN BOOL
 %token RETURN MAIN
 %token IF ELSE GOTO SWITCH CASE DEFAULT BREAK
 %token FOR DO WHILE CONTINUE
@@ -98,7 +98,7 @@ do_loop
 
 block
 :   { printf("{"); } statement { printf("}"); }
-|   OPCB { printf("{"); } statement_sequence CLCB { printf("}"); }
+|   OPCB { printf("{"); } statement_sequence CLCB { printf("} "); }
 ;
 
 condition
@@ -110,7 +110,18 @@ expression_p
 ;
 
 variable_declaration
-:   INT IDENTIFIER { printf("int %s", $2); /* Declaraciones de Amanda seguro van a ser mas completas */ }
+:   INT IDENTIFIER { printf("int %s", $2); }
+|   CHAR IDENTIFIER { printf("char %s", $2); }
+|   SHORT IDENTIFIER { printf("short %s", $2); }
+|   LONG IDENTIFIER { printf("long %s", $2); }
+|   FLOAT IDENTIFIER { printf("float %s", $2); }
+|   DOUBLE IDENTIFIER { printf("double %s", $2); }
+|   UNSIGNED INT IDENTIFIER { printf("int %s", $3); }
+|   UNSIGNED CHAR IDENTIFIER { printf("char %s", $3); }
+|   UNSIGNED SHORT IDENTIFIER { printf("short %s", $3); }
+|   UNSIGNED LONG IDENTIFIER { printf("long %s", $3); }
+|   CONST INT IDENTIFIER { printf("final int %s", $3); }
+|   BOOL IDENTIFIER { printf("boolean %s", $2); }
 ;
 
 assignment
@@ -193,6 +204,8 @@ value
 |   LIT_INT { printf($1); }
 |   unary_pre IDENTIFIER { printf($2); }
 |   IDENTIFIER { printf($1); } unary_post
+|   LIT_DOUBLE { printf($1); }
+|   LIT_CHAR   { printf($1); }
 ;
 
 /* PREPROCESSOR */
@@ -216,7 +229,7 @@ int main(int argc, char **argv)
 
 int yyerror(char *s)
 {
-    printf("Error on line %d: %s\n", line, s);
+    printf("\nError on line %d: %s\n", line, s);
 
     return 0;
 }
