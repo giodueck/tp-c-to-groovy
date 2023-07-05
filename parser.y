@@ -120,6 +120,7 @@ expression_p
 condition
 :   expression_p
 |   OPP { printf("("); } assignment CLP { printf(")"); }
+|   
 ;
 
 variable_declaration
@@ -139,6 +140,7 @@ variable_declaration
 
 assignment
 :   IDENTIFIER { printf("%s", $1); } assign_op expression
+|   variable_declaration assign_op expression
 ;
 
 assign_op
@@ -162,7 +164,7 @@ expression
 |   LIT_STRING { printf($1); }
 |   expression binary_op expression
 |   unary_op expression
-|   ternary
+//|   ternary
 ;
 
 expression_list
