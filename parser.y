@@ -19,7 +19,8 @@ extern int indentsize;
 %token<str> IDENTIFIER LIT_INT LIT_DOUBLE LIT_STRING LIT_CHAR
 
 %token HASH PP_INCLUDE STDIO_H STDBOOL_H
-%token PRINTF 
+%token PRINTF
+%token BOOL_TRUE BOOL_FALSE
 
 %token INT DOUBLE CHAR VOID CONST LONG SHORT SIGNED UNSIGNED STATIC VOLATILE FLOAT EXTERN BOOL
 %token RETURN MAIN
@@ -89,6 +90,7 @@ statement_no_end
 |   loop
 |   do_loop
 |   expression
+|   assignment
 |   variable_declaration
 ;
 
@@ -111,12 +113,13 @@ block
 |   OPCB { printf("{"); } statement_sequence CLCB { printf("} "); }
 ;
 
-condition
+expression_p
 :   OPP { printf("("); } expression CLP { printf(")"); }
 ;
 
-expression_p
-:   condition
+condition
+:   expression_p
+|   OPP { printf("("); } assignment CLP { printf(")"); }
 ;
 
 variable_declaration
@@ -158,7 +161,6 @@ expression
 |   expression_p
 |   LIT_STRING { printf($1); }
 |   expression binary_op expression
-|   assignment
 |   unary_op expression
 |   ternary
 ;
@@ -187,6 +189,7 @@ binary_op
 :   arithmetic_op
 |   bitwise_op
 |   logical_op
+|   comparative_op
 ;
 
 arithmetic_op
@@ -211,6 +214,15 @@ logical_op
 |   OR { printf(" %s ", $1); }
 ;
 
+comparative_op
+:   LE { printf(" %s ", $1); }
+|   GE { printf(" %s ", $1); }
+|   LT { printf(" %s ", $1); }
+|   GT { printf(" %s ", $1); }
+|   EQ { printf(" %s ", $1); }
+|   NE { printf(" %s ", $1); }
+;
+
 ternary
 :   condition QUESTION { printf(" %s ", $2); } statement_no_end COLON { printf(" %s ", $5); } statement_no_end
 
@@ -221,6 +233,8 @@ value
 |   IDENTIFIER { printf($1); } unary_post
 |   LIT_DOUBLE { printf($1); }
 |   LIT_CHAR   { printf($1); }
+|   BOOL_TRUE  { printf("true"); }
+|   BOOL_FALSE { printf("false"); }
 ;
 
 /* PREPROCESSOR */

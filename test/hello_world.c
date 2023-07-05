@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 
 int main()
 {
@@ -7,6 +8,7 @@ int main()
 	int a;
 	int b;
 	int c;
+	bool d;
     
 	a = 1;
 	b = 2;
@@ -17,10 +19,12 @@ int main()
 	c = (a << c) + 14 * 1;
 	b += 2;
 	c >>= b;
+	d = ((a > 0) ? 1 : 0) || !false;
 
 	printf("%d\n", a);
 	printf("%d\n", b);
 	printf("%d\n", c);
+	printf("%d\n", d);
 
 	return 0;
 }

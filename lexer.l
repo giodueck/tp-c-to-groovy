@@ -49,6 +49,9 @@ char    '[^']'
 "extern"        { return EXTERN; }
 "bool"          { return BOOL; }
 
+"true"          { return BOOL_TRUE; }
+"false"         { return BOOL_FALSE; }
+
 "("             { return OPP; }
 ")"             { return CLP; }
 "{"             { return OPCB; }
