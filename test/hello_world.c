@@ -18,9 +18,9 @@ int main()
 	b += 2;
 	c >>= b;
 
-    printf("%d\n", a);
-    printf("%d\n", b);
-    printf("%d\n", c);
+	printf("%d\n", a);
+	printf("%d\n", b);
+	printf("%d\n", c);
 
 	return 0;
 }

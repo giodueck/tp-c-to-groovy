@@ -24,6 +24,7 @@ char    '[^']'
 "#"             { return HASH; }
 "include"       { return PP_INCLUDE; }
 "stdio.h"       { return STDIO_H; }
+"stdbool.h"     { return STDBOOL_H; }
 
 "main"          { return MAIN; }
 "return"        { return RETURN; }
@@ -55,6 +56,7 @@ char    '[^']'
 "["             { return OPB; }
 "]"             { return CLB; }
 ";"             { return ENDS; }
+","             { return COMMA; }
 
 "<="            { yylval.str = strdup(yytext); return LE; }
 ">="            { yylval.str = strdup(yytext); return GE; }

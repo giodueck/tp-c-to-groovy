@@ -18,7 +18,7 @@ extern int indentsize;
 
 %token<str> IDENTIFIER LIT_INT LIT_DOUBLE LIT_STRING LIT_CHAR
 
-%token HASH PP_INCLUDE STDIO_H
+%token HASH PP_INCLUDE STDIO_H STDBOOL_H
 %token PRINTF 
 
 %token INT DOUBLE CHAR VOID CONST LONG SHORT SIGNED UNSIGNED STATIC VOLATILE FLOAT EXTERN BOOL
@@ -30,7 +30,7 @@ extern int indentsize;
 %token AUTO REGISTER
 
 %token OPP CLP OPCB CLCB OPB CLB
-%token ENDS
+%token ENDS COMMA
 
 %token<str> LE GE LT GT EQ NE
 
@@ -56,7 +56,12 @@ preprocessor
 ;
 
 pp_directive
-:   HASH PP_INCLUDE LT STDIO_H GT { }
+:   HASH PP_INCLUDE LT pp_library_to_ignore GT { }
+;
+
+pp_library_to_ignore
+:   STDIO_H
+|   STDBOOL_H
 ;
 
 global_scope
@@ -80,11 +85,16 @@ statement
 
 statement_no_end
 :   RETURN LIT_INT { printf("return %s", $2); }
-|   PRINTF OPP LIT_STRING CLP { printf("println(%s)", $3); }
+|   print
 |   loop
 |   do_loop
 |   expression
 |   variable_declaration
+;
+
+print
+:   PRINTF OPP LIT_STRING CLP { printf("printf(%s)", $3); }
+|   PRINTF OPP LIT_STRING COMMA { printf("printf(%s, ", $3); } expression_list CLP { printf(")"); }
 ;
 
 loop
@@ -151,6 +161,11 @@ expression
 |   assignment
 |   unary_op expression
 |   ternary
+;
+
+expression_list
+:   expression
+|   expression COMMA { printf(", "); } expression_list
 ;
 
 unary_op

@@ -1,7 +1,7 @@
 
 static void main(String[] args)
 {
-        println("Hello, World\n")
+        printf("Hello, World\n")
 
         int a
         int b
@@ -17,9 +17,9 @@ static void main(String[] args)
         b += 2
         c >>= b
 
-        println("" + a)
-        println("" + b)
-        println("" + c)
+        printf("%d\n", a)
+        printf("%d\n", b)
+        printf("%d\n", c)
 
         return 0
 }
