@@ -1,3 +1,10 @@
+
+
+void foo(){
+        printf("Inside foo()\n")
+        return
+}
+
 static void main(String[] args)
 {
         printf("Hello, World\n")

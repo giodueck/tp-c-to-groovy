@@ -2,9 +2,6 @@
 #include "parser.tab.h"
 
 int line = 1;
-int indent = 0;
-char *indent_literal = "    ";
-int indentsize = 4;
 
 int yywrap(void) {}
 %}
@@ -13,7 +10,7 @@ id      [a-zA-Z_][a-zA-Z_0-9]*
 integer [+-]?[0-9]+
 double  [+-]?[0-9]+(\.[0-9]*)?([eE][+-]?[0-9]+)?
 string  \"(\\.|[^"\\])*\"
-char    '[^']'
+char    '(\\.|[^'])'
 
 %%
 

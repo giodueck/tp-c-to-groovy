@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+void foo()
+{
+	printf("Inside foo()\n");
+	return;
+}
+
 int main()
 {
 	printf("Hello, World\n");
@@ -10,7 +16,7 @@ int main()
 	int c;
 	bool d;
 	short e = 5 * 15;
-    
+
 	a = 1;
 	b = 2;
 	c = 3;

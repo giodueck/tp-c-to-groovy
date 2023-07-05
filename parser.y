@@ -7,9 +7,6 @@ int yyparse();
 int yyerror(char *s);
 
 extern int line;
-extern int indent;
-extern char *indent_literal;
-extern int indentsize;
 %}
 
 %union {
@@ -65,8 +62,32 @@ pp_library_to_ignore
 |   STDBOOL_H
 ;
 
+global_statement
+:   function_declaration
+|   function_definition
+;
+
 global_scope
+:   main
+|   main global_scope_no_main
+|   global_statement global_scope
+;
+
+global_scope_no_main
+:   global_statement global_scope_no_main
+|   global_statement
+;
+
+main
 :   INT MAIN OPP CLP { printf("static void main(String[] args)"); } function_body
+;
+
+function_declaration
+:   VOID IDENTIFIER OPP CLP { printf("void %s()", $2); } ENDS { yyerror("Cannot do this"); }
+;
+
+function_definition
+:   VOID IDENTIFIER OPP CLP { printf("void %s()", $2); } function_body
 ;
 
 function_body
@@ -85,7 +106,8 @@ statement
 ;
 
 statement_no_end
-:   RETURN LIT_INT { printf("return %s", $2); }
+:   RETURN { printf("return "); } literal
+|   RETURN { printf("return"); }
 |   print
 |   loop
 |   do_loop
@@ -117,7 +139,7 @@ condition
 :   expression_p
 ;
 
-variable_declaration
+identifier_declaration
 :   INT IDENTIFIER { printf("int %s", $2); }
 |   CHAR IDENTIFIER { printf("char %s", $2); }
 |   SHORT IDENTIFIER { printf("short %s", $2); }
@@ -130,17 +152,25 @@ variable_declaration
 |   UNSIGNED LONG IDENTIFIER { printf("long %s", $3); }
 |   CONST INT IDENTIFIER { printf("final int %s", $3); }
 |   BOOL IDENTIFIER { printf("boolean %s", $2); }
+;
+
+variable_declaration
+:   identifier_declaration
+|   identifier_declaration assign expression
 |   variable_declaration COMMA IDENTIFIER {yyerror("No se admiten declaraciones multiples");}
 ;
 
 assignment
 :   IDENTIFIER { printf("%s", $1); } assign_op expression
-|   variable_declaration assign_op expression
 //|   assignment COMMA {yyerror("No se admiten asignaciones multiples");} IDENTIFIER
 ;
 
-assign_op
+assign
 :   ASSIGN { printf(" %s ", $1); }
+;
+
+assign_op
+:   assign
 |   PLUS_ASSIGN { printf(" %s ", $1); }
 |   MINUS_ASSIGN { printf(" %s ", $1); }
 |   ASTERISK_ASSIGN { printf(" %s ", $1); }
@@ -169,15 +199,19 @@ expression_p
 :   OPP { printf("("); } expression CLP { printf(")"); }
 ;
 
+literal
+:   LIT_INT     { printf($1); }
+|   LIT_DOUBLE  { printf($1); }
+|   LIT_CHAR    { printf($1); }
+|   BOOL_TRUE   { printf("true"); }
+|   BOOL_FALSE  { printf("false"); }
+;
+
 value
 :   IDENTIFIER { printf($1); }
-|   LIT_INT { printf($1); }
 |   unary_pre IDENTIFIER { printf($2); }
 |   IDENTIFIER { printf($1); } unary_post
-|   LIT_DOUBLE { printf($1); }
-|   LIT_CHAR   { printf($1); }
-|   BOOL_TRUE  { printf("true"); }
-|   BOOL_FALSE { printf("false"); }
+|   literal
 ;
 
 expression_0
@@ -327,16 +361,6 @@ logical_op_11
 ternary
 :   expression QUESTION { printf(" %s ", $2); } expression COLON { printf(" %s ", $5); } expression
 ;
-
-/* PREPROCESSOR */
-
-/* FUNCTIONS */
-
-/* VARIABLES */
-
-/* STATEMENTS & EXPRESSIONS */
-
-/* COMMENTS */
 
 %%
 
