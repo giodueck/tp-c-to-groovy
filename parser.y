@@ -120,7 +120,6 @@ expression_p
 condition
 :   expression_p
 |   OPP { printf("("); } assignment CLP { printf(")"); }
-|   
 ;
 
 variable_declaration
@@ -136,11 +135,13 @@ variable_declaration
 |   UNSIGNED LONG IDENTIFIER { printf("long %s", $3); }
 |   CONST INT IDENTIFIER { printf("final int %s", $3); }
 |   BOOL IDENTIFIER { printf("boolean %s", $2); }
+|   variable_declaration COMMA IDENTIFIER {yyerror("No se admiten declaraciones multiples");}
 ;
 
 assignment
 :   IDENTIFIER { printf("%s", $1); } assign_op expression
 |   variable_declaration assign_op expression
+//|   assignment COMMA {yyerror("No se admiten asignaciones multiples");} IDENTIFIER
 ;
 
 assign_op
