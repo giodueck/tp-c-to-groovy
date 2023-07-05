@@ -12,7 +12,18 @@ double  [+-]?[0-9]+(\.[0-9]*)?([eE][+-]?[0-9]+)?
 string  \"(\\.|[^"\\])*\"
 char    '(\\.|[^'])'
 
+%state IN_COMMENT
+
 %%
+
+"//"[^\n]*      // eat line comment
+"/*"            { BEGIN(IN_COMMENT); }
+<IN_COMMENT>{
+"*/"      BEGIN(INITIAL);
+[^*\n]+   // eat comment in chunks
+"*"       // eat the lone star
+\n        line++;
+}
 
 [\ ]            { }
 [\t]            { printf("\t"); }

@@ -1,11 +1,18 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+// void foo();
+
 void foo()
 {
 	printf("Inside foo()\n");
 	return;
-}
+} /* A little block comment /* */
+
+/* and
+a
+multiline
+one*/
 
 int main()
 {
