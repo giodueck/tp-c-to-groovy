@@ -89,7 +89,7 @@ statement_no_end
 |   print
 |   loop
 |   do_loop
-|   expression
+|   expression_list
 |   assignment
 |   variable_declaration
 ;
@@ -113,13 +113,8 @@ block
 |   OPCB { printf("{"); } statement_sequence CLCB { printf("} "); }
 ;
 
-expression_p
-:   OPP { printf("("); } expression CLP { printf(")"); }
-;
-
 condition
 :   expression_p
-|   OPP { printf("("); } assignment CLP { printf(")"); }
 ;
 
 variable_declaration
@@ -160,12 +155,9 @@ assign_op
 ;
 
 expression
-:   value
-|   expression_p
-|   LIT_STRING { printf($1); }
-|   expression binary_op expression
-|   unary_op expression
-//|   ternary
+:   expression_11
+|   ternary
+|   LIT_STRING { printf("%s", $1); }
 ;
 
 expression_list
@@ -173,10 +165,87 @@ expression_list
 |   expression COMMA { printf(", "); } expression_list
 ;
 
-unary_op
-:   NOT { printf($1); }
-|   MINUS { printf($1); }
+expression_p
+:   OPP { printf("("); } expression CLP { printf(")"); }
 ;
+
+value
+:   IDENTIFIER { printf($1); }
+|   LIT_INT { printf($1); }
+|   unary_pre IDENTIFIER { printf($2); }
+|   IDENTIFIER { printf($1); } unary_post
+|   LIT_DOUBLE { printf($1); }
+|   LIT_CHAR   { printf($1); }
+|   BOOL_TRUE  { printf("true"); }
+|   BOOL_FALSE { printf("false"); }
+;
+
+expression_0
+:   value
+|   expression_p
+;
+
+expression_1
+:   expression_0
+|   bitwise_op_1 expression_1
+|   unary_op_1 expression_1
+|   logical_op_1 expression_1
+;
+
+expression_2
+:   expression_1
+|   expression_2 arithmetic_op_2 expression_2
+;
+
+expression_3
+:   expression_2
+|   expression_3 arithmetic_op_3 expression_3
+;
+
+expression_4
+:   expression_3
+|   expression_4 bitwise_op_4 expression_4
+;
+
+expression_5
+:   expression_4
+|   expression_5 relational_op_5 expression_5
+;
+
+expression_6
+:   expression_5
+|   expression_6 relational_op_6 expression_6
+;
+
+expression_7
+:   expression_6
+|   expression_7 bitwise_op_7 expression_7
+;
+
+expression_8
+:   expression_7
+|   expression_8 bitwise_op_8 expression_8
+;
+
+expression_9
+:   expression_8
+|   expression_9 bitwise_op_9 expression_9
+;
+
+expression_10
+:   expression_9
+|   expression_10 logical_op_10 expression_10
+;
+
+expression_11
+:   expression_10
+|   expression_11 logical_op_11 expression_11
+;
+
+/* Operator precedence:
+    Highest is lowest number, pre and postfix ++ or -- are 0
+
+ */
 
 unary_pre
 :   INCREMENT { printf($1); }
@@ -188,56 +257,75 @@ unary_post
 |   DECREMENT { printf($1); }
 ;
 
-binary_op
-:   arithmetic_op
-|   bitwise_op
-|   logical_op
-|   comparative_op
+bitwise_op_1
+:   NEGATION { printf(" %s ", $1); }
 ;
 
-arithmetic_op
-:   PLUS { printf(" %s ", $1); }
-|   MINUS { printf(" %s ", $1); }
-|   ASTERISK { printf(" %s ", $1); }
+unary_op_1
+:   MINUS { printf($1); }
+|   PLUS { printf($1); }
+;
+
+logical_op_1
+:   NOT { printf($1); }
+;
+
+arithmetic_op_2
+:   ASTERISK { printf(" %s ", $1); }
 |   SLASH { printf(" %s ", $1); }
 |   PERCENT { printf(" %s ", $1); }
 ;
 
-bitwise_op
-:   AMPERSAND { printf(" %s ", $1); }
-|   PIPE { printf(" %s ", $1); }
-|   CARET { printf(" %s ", $1); }
-|   NEGATION { printf(" %s ", $1); }
-|   SHIFT_LEFT { printf(" %s ", $1); }
+arithmetic_op_3
+:   PLUS { printf(" %s ", $1); }
+|   MINUS { printf(" %s ", $1); }
+;
+
+bitwise_op_4
+:   SHIFT_LEFT { printf(" %s ", $1); }
 |   SHIFT_RIGHT { printf(" %s ", $1); }
 ;
 
-logical_op
-:   AND { printf(" %s ", $1); }
-|   OR { printf(" %s ", $1); }
-;
-
-comparative_op
+relational_op_5
 :   LE { printf(" %s ", $1); }
 |   GE { printf(" %s ", $1); }
 |   LT { printf(" %s ", $1); }
 |   GT { printf(" %s ", $1); }
-|   EQ { printf(" %s ", $1); }
+;
+
+relational_op_6
+:   EQ { printf(" %s ", $1); }
 |   NE { printf(" %s ", $1); }
 ;
 
-ternary
-:   condition QUESTION { printf(" %s ", $2); } statement_no_end COLON { printf(" %s ", $5); } statement_no_end
+bitwise_op_7
+:   AMPERSAND { printf(" %s ", $1); }
+;
 
-value
-:   IDENTIFIER { printf($1); }
-|   LIT_INT { printf($1); }
-|   unary_pre IDENTIFIER { printf($2); }
-|   IDENTIFIER { printf($1); } unary_post
-|   LIT_DOUBLE { printf($1); }
-|   LIT_CHAR   { printf($1); }
-|   BOOL_TRUE  { printf("true"); }
-|   BOOL_FALSE { printf("false"); }
+bitwise_op_8
+:   CARET { printf(" %s ", $1); }
+;
+
+bitwise_op_9
+:   PIPE { printf(" %s ", $1); }
+;
+
+logical_op_10
+:   AND { printf(" %s ", $1); }
+;
+
+logical_op_11
+:   OR { printf(" %s ", $1); }
+;
+
+/* ternary_op_12 */
+
+/* assignments are 13 */
+
+/* comma is 14 */
+
+ternary
+:   expression QUESTION { printf(" %s ", $2); } expression COLON { printf(" %s ", $5); } expression
 ;
 
 /* PREPROCESSOR */
