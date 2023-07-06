@@ -113,10 +113,13 @@ statement
 ;
 
 conditional_statement
-:   IF OPP { fprintf(outfd, "if ( "); } expression CLP { fprintf(outfd, ")"); } block ELSE {fprintf(outfd, "else ");} block
-|   IF OPP { fprintf(outfd, "if ( "); } expression CLP { fprintf(outfd, ")"); } block
-|   IF OPP { fprintf(outfd, "if ( "); } expression error {yyerror("Se espera un simbolo ')' en la expresion 'if'.");}
+:   IF { fprintf(outfd, "if "); } condition block else_statement
 //| SWITCH '(' expression ')' block
+;
+
+else_statement
+:
+|   ELSE {fprintf(outfd, "else ");} block
 ;
 
 statement_no_end

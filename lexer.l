@@ -45,6 +45,9 @@ char    '(\\.|[^'])'
 "break"         { return BREAK; }
 "continue"      { return CONTINUE; }
 
+"if"            { return IF; }
+"else"          { return ELSE; }
+
 "int"           { return INT; }
 "void"          { return VOID; }
 "char"          { return CHAR; }
