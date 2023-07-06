@@ -1,6 +1,20 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+int factorial(long n)
+{
+    if (n <= 1)
+        return 1;
+    else
+        return n * factorial(n - 1);
+}
+
+void noop()
+{
+    printf("\n");
+    return;
+}
+
 int main()
 {
     int fact = 1;
@@ -26,6 +40,11 @@ int main()
     }
 
     printf("%d! = %d\n", n, fact);
+
+    const int m = 8;
+    printf("%d! = %d\n", m, factorial(m));
+
+    noop();
 
     return 0;
 }

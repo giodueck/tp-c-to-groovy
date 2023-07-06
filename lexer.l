@@ -26,8 +26,8 @@ char    '(\\.|[^'])'
 \n        line++; fprintf(outfd, yytext);
 }
 
-[\ ]            { }
-[\t]            { fprintf(outfd, "\t"); }
+\t|("    ")     { fprintf(outfd, yytext); }
+[ ]             // ignore spaces that are not 4 wide
 [\n]            { line++; fprintf(outfd, "\n"); }
 
 "#"             { return HASH; }

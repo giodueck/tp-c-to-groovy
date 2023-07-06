@@ -69,8 +69,7 @@ pp_library_to_ignore
 ;
 
 global_statement
-:   function_declaration
-|   function_definition
+:   function_definition
 ;
 
 global_scope
@@ -88,16 +87,28 @@ main
 :   INT MAIN OPP CLP { fprintf(outfd, "static void main(String[] args)"); } function_body
 ;
 
-function_declaration
-:   VOID IDENTIFIER OPP CLP { fprintf(outfd, "void %s()", $2); } ENDS { yyerror("Cannot do this"); }
-;
-
 function_definition
-:   VOID IDENTIFIER OPP CLP { fprintf(outfd, "void %s()", $2); } function_body
+:   function_type IDENTIFIER OPP { fprintf(outfd, "%s(", $2); } parameter_list CLP { fprintf(outfd, ")"); } function_body
 ;
 
 function_body
 :   OPCB { fprintf(outfd, "{"); } statement_sequence CLCB { fprintf(outfd, "}"); }
+|   error { yyerror("Funcion sin cuerpo"); }
+;
+
+function_call
+:   IDENTIFIER OPP { fprintf(outfd, "%s(", $1); } argument_list CLP { fprintf(outfd, ")"); }
+;
+
+parameter_list
+:
+|   identifier_declaration
+|   identifier_declaration COMMA { fprintf(outfd, ", "); } parameter_list
+;
+
+argument_list
+:
+|   expression_list
 ;
 
 statement_sequence
@@ -123,7 +134,7 @@ else_statement
 ;
 
 statement_no_end
-:   RETURN { fprintf(outfd, "return "); } literal
+:   RETURN { fprintf(outfd, "return "); } expression
 |   RETURN { fprintf(outfd, "return"); }
 |   CONTINUE { (continueable) ? fprintf(outfd, "continue") : yyerror("No puede usarse \"continue\" fuera de un ciclo"); }
 |   BREAK { (continueable) ? fprintf(outfd, "break") : yyerror("No puede usarse \"break\" fuera de un ciclo o un switch"); }
@@ -165,19 +176,32 @@ condition
 :   expression_p
 ;
 
+type_qualifier
+:   CONST   { fprintf(outfd, "final "); }
+;
+
+variable_type 
+:   INT      { fprintf(outfd, "int "); }
+|   CHAR     { fprintf(outfd, "char "); }
+|   SHORT    { fprintf(outfd, "short "); }
+|   LONG     { fprintf(outfd, "long "); }
+|   FLOAT    { fprintf(outfd, "float "); }
+|   DOUBLE   { fprintf(outfd, "double "); }
+|   BOOL     { fprintf(outfd, "boolean "); }
+;
+
+function_type
+:   variable_type
+|   VOID { fprintf(outfd, "void "); }
+;
+
 identifier_declaration
-:   INT IDENTIFIER { fprintf(outfd, "int %s", $2); }
-|   CHAR IDENTIFIER { fprintf(outfd, "char %s", $2); }
-|   SHORT IDENTIFIER { fprintf(outfd, "short %s", $2); }
-|   LONG IDENTIFIER { fprintf(outfd, "long %s", $2); }
-|   FLOAT IDENTIFIER { fprintf(outfd, "float %s", $2); }
-|   DOUBLE IDENTIFIER { fprintf(outfd, "double %s", $2); }
+:   variable_type IDENTIFIER { fprintf(outfd, $2); }
+|   type_qualifier variable_type IDENTIFIER { fprintf(outfd, $3); }
 |   UNSIGNED INT IDENTIFIER { fprintf(outfd, "int %s", $3); }
 |   UNSIGNED CHAR IDENTIFIER { fprintf(outfd, "char %s", $3); }
 |   UNSIGNED SHORT IDENTIFIER { fprintf(outfd, "short %s", $3); }
 |   UNSIGNED LONG IDENTIFIER { fprintf(outfd, "long %s", $3); }
-|   CONST INT IDENTIFIER { fprintf(outfd, "final int %s", $3); }
-|   BOOL IDENTIFIER { fprintf(outfd, "boolean %s", $2); }
 ;
 
 variable_declaration
@@ -243,6 +267,7 @@ value
 expression_0
 :   value
 |   expression_p
+|   function_call
 ;
 
 expression_1
