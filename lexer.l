@@ -17,13 +17,13 @@ char    '(\\.|[^'])'
 
 %%
 
-"//"[^\n]*      // eat line comment
-"/*"            { BEGIN(IN_COMMENT); }
+"//"[^\n]*      { fprintf(outfd, yytext); }
+"/*"            { BEGIN(IN_COMMENT); fprintf(outfd, yytext); }
 <IN_COMMENT>{
-"*/"      BEGIN(INITIAL);
-[^*\n]+   // eat comment in chunks
-"*"       // eat the lone star
-\n        line++;
+"*/"      BEGIN(INITIAL); fprintf(outfd, yytext);
+[^*\n]+   fprintf(outfd, yytext);
+"*"       fprintf(outfd, yytext);
+\n        line++; fprintf(outfd, yytext);
 }
 
 [\ ]            { }

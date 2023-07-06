@@ -1,7 +1,7 @@
 
 
 
-
+// void foo();
 
 
 void foo(){
@@ -12,9 +12,12 @@ void foo(){
 	} 
 	printf("Inside foo()\n")
 	return
-}
+}/* A little block comment /* */
 
-
+/* and
+a
+multiline
+one*/
 
 static void main(String[] args)
 {
