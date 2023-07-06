@@ -5,6 +5,11 @@
 
 void foo()
 {
+	for (int i = 0; i < 5; i++)
+	{
+		printf(".");
+		continue;
+	}
 	printf("Inside foo()\n");
 	return;
 } /* A little block comment /* */

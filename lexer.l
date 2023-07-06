@@ -41,6 +41,8 @@ char    '(\\.|[^'])'
 "while"         { return WHILE; }
 "do"            { return DO; }
 "for"           { return FOR; }
+"break"         { return BREAK; }
+"continue"      { return CONTINUE; }
 
 "int"           { return INT; }
 "void"          { return VOID; }

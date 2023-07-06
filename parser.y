@@ -7,6 +7,9 @@ int yyparse();
 int yyerror(char *s);
 
 extern int line;
+
+int breakable = 0;
+int continueable = 0;
 %}
 
 %union {
@@ -108,8 +111,9 @@ statement
 statement_no_end
 :   RETURN { printf("return "); } literal
 |   RETURN { printf("return"); }
+|   CONTINUE { (continueable) ? printf("continue") : yyerror("Cannot use \"continue\" if not in a loop"); }
+|   BREAK { (continueable) ? printf("break") : yyerror("Cannot use \"break\" if not in a loop or a switch statement"); }
 |   print
-|   loop
 |   do_loop
 |   expression_list
 |   assignment
@@ -122,12 +126,20 @@ print
 ;
 
 loop
-:   WHILE { printf("while "); } condition block
-|   FOR OPP { printf("for ("); } variable_declaration ENDS { printf("; "); } expression ENDS { printf("; "); } statement_no_end CLP { printf(")"); } block
+:   WHILE { printf("while "); } condition block_continueable
+|   FOR OPP { printf("for ("); } variable_declaration ENDS { printf("; "); } expression ENDS { printf("; "); } expression CLP { printf(")"); } block_continueable
 ;
 
 do_loop
-:   DO { printf("do "); } block WHILE { printf(" while "); } condition
+:   DO { printf("do "); } block_continueable WHILE { printf(" while "); } condition
+;
+
+block_breakable
+:   { breakable = 1; } block { breakable = 0; }
+;
+
+block_continueable
+:   { continueable = 1; } block_breakable { continueable = 0; }
 ;
 
 block
