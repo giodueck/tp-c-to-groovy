@@ -36,16 +36,16 @@ FILE *outfd = NULL;
 %token OPP CLP OPCB CLCB OPB CLB
 %token ENDS COMMA
 
-%token<str> LE GE LT GT EQ NE
+%token LE GE LT GT EQ NE
 
-%token<str> PLUS MINUS ASTERISK SLASH PERCENT INCREMENT DECREMENT AMPERSAND PIPE CARET NEGATION SHIFT_LEFT SHIFT_RIGHT
+%token PLUS MINUS ASTERISK SLASH PERCENT INCREMENT DECREMENT AMPERSAND PIPE CARET NEGATION SHIFT_LEFT SHIFT_RIGHT
 
-%token<str> ASSIGN PLUS_ASSIGN MINUS_ASSIGN ASTERISK_ASSIGN SLASH_ASSIGN PERCENT_ASSIGN
-%token<str> AMPERSAND_ASSIGN PIPE_ASSIGN CARET_ASSIGN NEGATION_ASSIGN SHIFT_LEFT_ASSIGN SHIFT_RIGHT_ASSIGN
+%token ASSIGN PLUS_ASSIGN MINUS_ASSIGN ASTERISK_ASSIGN SLASH_ASSIGN PERCENT_ASSIGN
+%token AMPERSAND_ASSIGN PIPE_ASSIGN CARET_ASSIGN NEGATION_ASSIGN SHIFT_LEFT_ASSIGN SHIFT_RIGHT_ASSIGN
 
-%token<str> AND OR NOT
+%token AND OR NOT
 
-%token<str> QUESTION COLON
+%token QUESTION COLON
 
 %%
 
@@ -189,22 +189,22 @@ assignment
 ;
 
 assign
-:   ASSIGN { fprintf(outfd, " %s ", $1); }
+:   ASSIGN { fprintf(outfd, " = "); }
 ;
 
 assign_op
 :   assign
-|   PLUS_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   MINUS_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   ASTERISK_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   SLASH_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   PERCENT_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   AMPERSAND_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   PIPE_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   CARET_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   NEGATION_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   SHIFT_LEFT_ASSIGN { fprintf(outfd, " %s ", $1); }
-|   SHIFT_RIGHT_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   PLUS_ASSIGN         { fprintf(outfd, " += "); }
+|   MINUS_ASSIGN        { fprintf(outfd, " -= "); }
+|   ASTERISK_ASSIGN     { fprintf(outfd, " *= "); }
+|   SLASH_ASSIGN        { fprintf(outfd, " /= "); }
+|   PERCENT_ASSIGN      { fprintf(outfd, " %= "); }
+|   AMPERSAND_ASSIGN    { fprintf(outfd, " &= "); }
+|   PIPE_ASSIGN         { fprintf(outfd, " |= "); }
+|   CARET_ASSIGN        { fprintf(outfd, " ^= "); }
+|   NEGATION_ASSIGN     { fprintf(outfd, " ~= "); }
+|   SHIFT_LEFT_ASSIGN   { fprintf(outfd, " <<= "); }
+|   SHIFT_RIGHT_ASSIGN  { fprintf(outfd, " >>= "); }
 ;
 
 expression
@@ -305,74 +305,74 @@ expression_11
  */
 
 unary_pre
-:   INCREMENT { fprintf(outfd, $1); }
-|   DECREMENT { fprintf(outfd, $1); }
+:   INCREMENT { fprintf(outfd, "++"); }
+|   DECREMENT { fprintf(outfd, "--"); }
 ;
 
 unary_post
-:   INCREMENT { fprintf(outfd, $1); }
-|   DECREMENT { fprintf(outfd, $1); }
+:   INCREMENT { fprintf(outfd, "++"); }
+|   DECREMENT { fprintf(outfd, "--"); }
 ;
 
 bitwise_op_1
-:   NEGATION { fprintf(outfd, " %s ", $1); }
+:   NEGATION { fprintf(outfd, "~"); }
 ;
 
 unary_op_1
-:   MINUS { fprintf(outfd, $1); }
-|   PLUS { fprintf(outfd, $1); }
+:   MINUS { fprintf(outfd, "-"); }
+|   PLUS { fprintf(outfd, "+"); }
 ;
 
 logical_op_1
-:   NOT { fprintf(outfd, $1); }
+:   NOT { fprintf(outfd, "!"); }
 ;
 
 arithmetic_op_2
-:   ASTERISK { fprintf(outfd, " %s ", $1); }
-|   SLASH { fprintf(outfd, " %s ", $1); }
-|   PERCENT { fprintf(outfd, " %s ", $1); }
+:   ASTERISK    { fprintf(outfd, " * "); }
+|   SLASH       { fprintf(outfd, " / "); }
+|   PERCENT     { fprintf(outfd, " % "); }
 ;
 
 arithmetic_op_3
-:   PLUS { fprintf(outfd, " %s ", $1); }
-|   MINUS { fprintf(outfd, " %s ", $1); }
+:   PLUS    { fprintf(outfd, " + "); }
+|   MINUS   { fprintf(outfd, " - "); }
 ;
 
 bitwise_op_4
-:   SHIFT_LEFT { fprintf(outfd, " %s ", $1); }
-|   SHIFT_RIGHT { fprintf(outfd, " %s ", $1); }
+:   SHIFT_LEFT  { fprintf(outfd, " << "); }
+|   SHIFT_RIGHT { fprintf(outfd, " >> "); }
 ;
 
 relational_op_5
-:   LE { fprintf(outfd, " %s ", $1); }
-|   GE { fprintf(outfd, " %s ", $1); }
-|   LT { fprintf(outfd, " %s ", $1); }
-|   GT { fprintf(outfd, " %s ", $1); }
+:   LE { fprintf(outfd, " <= "); }
+|   GE { fprintf(outfd, " >= "); }
+|   LT { fprintf(outfd, " < "); }
+|   GT { fprintf(outfd, " > "); }
 ;
 
 relational_op_6
-:   EQ { fprintf(outfd, " %s ", $1); }
-|   NE { fprintf(outfd, " %s ", $1); }
+:   EQ { fprintf(outfd, " == "); }
+|   NE { fprintf(outfd, " != "); }
 ;
 
 bitwise_op_7
-:   AMPERSAND { fprintf(outfd, " %s ", $1); }
+:   AMPERSAND { fprintf(outfd, " & "); }
 ;
 
 bitwise_op_8
-:   CARET { fprintf(outfd, " %s ", $1); }
+:   CARET { fprintf(outfd, " ^ "); }
 ;
 
 bitwise_op_9
-:   PIPE { fprintf(outfd, " %s ", $1); }
+:   PIPE { fprintf(outfd, " | "); }
 ;
 
 logical_op_10
-:   AND { fprintf(outfd, " %s ", $1); }
+:   AND { fprintf(outfd, " && "); }
 ;
 
 logical_op_11
-:   OR { fprintf(outfd, " %s ", $1); }
+:   OR { fprintf(outfd, " || "); }
 ;
 
 /* ternary_op_12 */
@@ -382,7 +382,7 @@ logical_op_11
 /* comma is 14 */
 
 ternary
-:   expression QUESTION { fprintf(outfd, " %s ", $2); } expression COLON { fprintf(outfd, " %s ", $5); } expression
+:   expression QUESTION { fprintf(outfd, " ? "); } expression COLON { fprintf(outfd, " : "); } expression
 ;
 
 %%
