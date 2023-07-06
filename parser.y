@@ -5,11 +5,14 @@
 int yylex();
 int yyparse();
 int yyerror(char *s);
+extern FILE *yyin;
 
 extern int line;
 
 int breakable = 0;
 int continueable = 0;
+
+FILE *outfd = NULL;
 %}
 
 %union {
@@ -82,19 +85,19 @@ global_scope_no_main
 ;
 
 main
-:   INT MAIN OPP CLP { printf("static void main(String[] args)"); } function_body
+:   INT MAIN OPP CLP { fprintf(outfd, "static void main(String[] args)"); } function_body
 ;
 
 function_declaration
-:   VOID IDENTIFIER OPP CLP { printf("void %s()", $2); } ENDS { yyerror("Cannot do this"); }
+:   VOID IDENTIFIER OPP CLP { fprintf(outfd, "void %s()", $2); } ENDS { yyerror("Cannot do this"); }
 ;
 
 function_definition
-:   VOID IDENTIFIER OPP CLP { printf("void %s()", $2); } function_body
+:   VOID IDENTIFIER OPP CLP { fprintf(outfd, "void %s()", $2); } function_body
 ;
 
 function_body
-:   OPCB { printf("{"); } statement_sequence CLCB { printf("}"); }
+:   OPCB { fprintf(outfd, "{"); } statement_sequence CLCB { fprintf(outfd, "}"); }
 ;
 
 statement_sequence
@@ -110,17 +113,17 @@ statement
 ;
 
 conditional_statement
-: IF OPP {printf("if ( ");} expression ')' CLP block ELSE {printf("else ");} block
-| IF OPP {printf("if ( ");} expression ')' CLP block
-| IF OPP {printf("if ( ");} expression error {yyerror("Se espera un simbolo ')' en la expresion 'if'.");}
+:   IF OPP { fprintf(outfd, "if ( "); } expression CLP { fprintf(outfd, ")"); } block ELSE {fprintf(outfd, "else ");} block
+|   IF OPP { fprintf(outfd, "if ( "); } expression CLP { fprintf(outfd, ")"); } block
+|   IF OPP { fprintf(outfd, "if ( "); } expression error {yyerror("Se espera un simbolo ')' en la expresion 'if'.");}
 //| SWITCH '(' expression ')' block
 ;
 
 statement_no_end
-:   RETURN { printf("return "); } literal
-|   RETURN { printf("return"); }
-|   CONTINUE { (continueable) ? printf("continue") : yyerror("Cannot use \"continue\" if not in a loop"); }
-|   BREAK { (continueable) ? printf("break") : yyerror("Cannot use \"break\" if not in a loop or a switch statement"); }
+:   RETURN { fprintf(outfd, "return "); } literal
+|   RETURN { fprintf(outfd, "return"); }
+|   CONTINUE { (continueable) ? fprintf(outfd, "continue") : yyerror("No puede usarse \"continue\" fuera de un ciclo"); }
+|   BREAK { (continueable) ? fprintf(outfd, "break") : yyerror("No puede usarse \"break\" fuera de un ciclo o un switch"); }
 |   print
 |   do_loop
 |   expression_list
@@ -129,17 +132,17 @@ statement_no_end
 ;
 
 print
-:   PRINTF OPP LIT_STRING CLP { printf("printf(%s)", $3); }
-|   PRINTF OPP LIT_STRING COMMA { printf("printf(%s, ", $3); } expression_list CLP { printf(")"); }
+:   PRINTF OPP LIT_STRING CLP { fprintf(outfd, "printf(%s)", $3); }
+|   PRINTF OPP LIT_STRING COMMA { fprintf(outfd, "printf(%s, ", $3); } expression_list CLP { fprintf(outfd, ")"); }
 ;
 
 loop
-:   WHILE { printf("while "); } condition block_continueable
-|   FOR OPP { printf("for ("); } variable_declaration ENDS { printf("; "); } expression ENDS { printf("; "); } expression CLP { printf(")"); } block_continueable
+:   WHILE { fprintf(outfd, "while "); } condition block_continueable
+|   FOR OPP { fprintf(outfd, "for ("); } variable_declaration ENDS { fprintf(outfd, "; "); } expression ENDS { fprintf(outfd, "; "); } expression CLP { fprintf(outfd, ")"); } block_continueable
 ;
 
 do_loop
-:   DO { printf("do "); } block_continueable WHILE { printf(" while "); } condition
+:   DO { fprintf(outfd, "do "); } block_continueable WHILE { fprintf(outfd, " while "); } condition
 ;
 
 block_breakable
@@ -151,8 +154,8 @@ block_continueable
 ;
 
 block
-:   { printf("{"); } statement { printf("}"); }
-|   OPCB { printf("{"); } statement_sequence CLCB { printf("} "); }
+:   { fprintf(outfd, "{"); } statement { fprintf(outfd, "}"); }
+|   OPCB { fprintf(outfd, "{"); } statement_sequence CLCB { fprintf(outfd, "} "); }
 ;
 
 condition
@@ -160,18 +163,18 @@ condition
 ;
 
 identifier_declaration
-:   INT IDENTIFIER { printf("int %s", $2); }
-|   CHAR IDENTIFIER { printf("char %s", $2); }
-|   SHORT IDENTIFIER { printf("short %s", $2); }
-|   LONG IDENTIFIER { printf("long %s", $2); }
-|   FLOAT IDENTIFIER { printf("float %s", $2); }
-|   DOUBLE IDENTIFIER { printf("double %s", $2); }
-|   UNSIGNED INT IDENTIFIER { printf("int %s", $3); }
-|   UNSIGNED CHAR IDENTIFIER { printf("char %s", $3); }
-|   UNSIGNED SHORT IDENTIFIER { printf("short %s", $3); }
-|   UNSIGNED LONG IDENTIFIER { printf("long %s", $3); }
-|   CONST INT IDENTIFIER { printf("final int %s", $3); }
-|   BOOL IDENTIFIER { printf("boolean %s", $2); }
+:   INT IDENTIFIER { fprintf(outfd, "int %s", $2); }
+|   CHAR IDENTIFIER { fprintf(outfd, "char %s", $2); }
+|   SHORT IDENTIFIER { fprintf(outfd, "short %s", $2); }
+|   LONG IDENTIFIER { fprintf(outfd, "long %s", $2); }
+|   FLOAT IDENTIFIER { fprintf(outfd, "float %s", $2); }
+|   DOUBLE IDENTIFIER { fprintf(outfd, "double %s", $2); }
+|   UNSIGNED INT IDENTIFIER { fprintf(outfd, "int %s", $3); }
+|   UNSIGNED CHAR IDENTIFIER { fprintf(outfd, "char %s", $3); }
+|   UNSIGNED SHORT IDENTIFIER { fprintf(outfd, "short %s", $3); }
+|   UNSIGNED LONG IDENTIFIER { fprintf(outfd, "long %s", $3); }
+|   CONST INT IDENTIFIER { fprintf(outfd, "final int %s", $3); }
+|   BOOL IDENTIFIER { fprintf(outfd, "boolean %s", $2); }
 ;
 
 variable_declaration
@@ -181,56 +184,56 @@ variable_declaration
 ;
 
 assignment
-:   IDENTIFIER { printf("%s", $1); } assign_op expression
+:   IDENTIFIER { fprintf(outfd, "%s", $1); } assign_op expression
 //|   assignment COMMA {yyerror("No se admiten asignaciones multiples");} IDENTIFIER
 ;
 
 assign
-:   ASSIGN { printf(" %s ", $1); }
+:   ASSIGN { fprintf(outfd, " %s ", $1); }
 ;
 
 assign_op
 :   assign
-|   PLUS_ASSIGN { printf(" %s ", $1); }
-|   MINUS_ASSIGN { printf(" %s ", $1); }
-|   ASTERISK_ASSIGN { printf(" %s ", $1); }
-|   SLASH_ASSIGN { printf(" %s ", $1); }
-|   PERCENT_ASSIGN { printf(" %s ", $1); }
-|   AMPERSAND_ASSIGN { printf(" %s ", $1); }
-|   PIPE_ASSIGN { printf(" %s ", $1); }
-|   CARET_ASSIGN { printf(" %s ", $1); }
-|   NEGATION_ASSIGN { printf(" %s ", $1); }
-|   SHIFT_LEFT_ASSIGN { printf(" %s ", $1); }
-|   SHIFT_RIGHT_ASSIGN { printf(" %s ", $1); }
+|   PLUS_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   MINUS_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   ASTERISK_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   SLASH_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   PERCENT_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   AMPERSAND_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   PIPE_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   CARET_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   NEGATION_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   SHIFT_LEFT_ASSIGN { fprintf(outfd, " %s ", $1); }
+|   SHIFT_RIGHT_ASSIGN { fprintf(outfd, " %s ", $1); }
 ;
 
 expression
 :   expression_11
 |   ternary
-|   LIT_STRING { printf("%s", $1); }
+|   LIT_STRING { fprintf(outfd, "%s", $1); }
 ;
 
 expression_list
 :   expression
-|   expression COMMA { printf(", "); } expression_list
+|   expression COMMA { fprintf(outfd, ", "); } expression_list
 ;
 
 expression_p
-:   OPP { printf("("); } expression CLP { printf(")"); }
+:   OPP { fprintf(outfd, "("); } expression CLP { fprintf(outfd, ")"); }
 ;
 
 literal
-:   LIT_INT     { printf($1); }
-|   LIT_DOUBLE  { printf($1); }
-|   LIT_CHAR    { printf($1); }
-|   BOOL_TRUE   { printf("true"); }
-|   BOOL_FALSE  { printf("false"); }
+:   LIT_INT     { fprintf(outfd, $1); }
+|   LIT_DOUBLE  { fprintf(outfd, $1); }
+|   LIT_CHAR    { fprintf(outfd, $1); }
+|   BOOL_TRUE   { fprintf(outfd, "true"); }
+|   BOOL_FALSE  { fprintf(outfd, "false"); }
 ;
 
 value
-:   IDENTIFIER { printf($1); }
-|   unary_pre IDENTIFIER { printf($2); }
-|   IDENTIFIER { printf($1); } unary_post
+:   IDENTIFIER { fprintf(outfd, $1); }
+|   unary_pre IDENTIFIER { fprintf(outfd, $2); }
+|   IDENTIFIER { fprintf(outfd, $1); } unary_post
 |   literal
 ;
 
@@ -302,74 +305,74 @@ expression_11
  */
 
 unary_pre
-:   INCREMENT { printf($1); }
-|   DECREMENT { printf($1); }
+:   INCREMENT { fprintf(outfd, $1); }
+|   DECREMENT { fprintf(outfd, $1); }
 ;
 
 unary_post
-:   INCREMENT { printf($1); }
-|   DECREMENT { printf($1); }
+:   INCREMENT { fprintf(outfd, $1); }
+|   DECREMENT { fprintf(outfd, $1); }
 ;
 
 bitwise_op_1
-:   NEGATION { printf(" %s ", $1); }
+:   NEGATION { fprintf(outfd, " %s ", $1); }
 ;
 
 unary_op_1
-:   MINUS { printf($1); }
-|   PLUS { printf($1); }
+:   MINUS { fprintf(outfd, $1); }
+|   PLUS { fprintf(outfd, $1); }
 ;
 
 logical_op_1
-:   NOT { printf($1); }
+:   NOT { fprintf(outfd, $1); }
 ;
 
 arithmetic_op_2
-:   ASTERISK { printf(" %s ", $1); }
-|   SLASH { printf(" %s ", $1); }
-|   PERCENT { printf(" %s ", $1); }
+:   ASTERISK { fprintf(outfd, " %s ", $1); }
+|   SLASH { fprintf(outfd, " %s ", $1); }
+|   PERCENT { fprintf(outfd, " %s ", $1); }
 ;
 
 arithmetic_op_3
-:   PLUS { printf(" %s ", $1); }
-|   MINUS { printf(" %s ", $1); }
+:   PLUS { fprintf(outfd, " %s ", $1); }
+|   MINUS { fprintf(outfd, " %s ", $1); }
 ;
 
 bitwise_op_4
-:   SHIFT_LEFT { printf(" %s ", $1); }
-|   SHIFT_RIGHT { printf(" %s ", $1); }
+:   SHIFT_LEFT { fprintf(outfd, " %s ", $1); }
+|   SHIFT_RIGHT { fprintf(outfd, " %s ", $1); }
 ;
 
 relational_op_5
-:   LE { printf(" %s ", $1); }
-|   GE { printf(" %s ", $1); }
-|   LT { printf(" %s ", $1); }
-|   GT { printf(" %s ", $1); }
+:   LE { fprintf(outfd, " %s ", $1); }
+|   GE { fprintf(outfd, " %s ", $1); }
+|   LT { fprintf(outfd, " %s ", $1); }
+|   GT { fprintf(outfd, " %s ", $1); }
 ;
 
 relational_op_6
-:   EQ { printf(" %s ", $1); }
-|   NE { printf(" %s ", $1); }
+:   EQ { fprintf(outfd, " %s ", $1); }
+|   NE { fprintf(outfd, " %s ", $1); }
 ;
 
 bitwise_op_7
-:   AMPERSAND { printf(" %s ", $1); }
+:   AMPERSAND { fprintf(outfd, " %s ", $1); }
 ;
 
 bitwise_op_8
-:   CARET { printf(" %s ", $1); }
+:   CARET { fprintf(outfd, " %s ", $1); }
 ;
 
 bitwise_op_9
-:   PIPE { printf(" %s ", $1); }
+:   PIPE { fprintf(outfd, " %s ", $1); }
 ;
 
 logical_op_10
-:   AND { printf(" %s ", $1); }
+:   AND { fprintf(outfd, " %s ", $1); }
 ;
 
 logical_op_11
-:   OR { printf(" %s ", $1); }
+:   OR { fprintf(outfd, " %s ", $1); }
 ;
 
 /* ternary_op_12 */
@@ -379,21 +382,47 @@ logical_op_11
 /* comma is 14 */
 
 ternary
-:   expression QUESTION { printf(" %s ", $2); } expression COLON { printf(" %s ", $5); } expression
+:   expression QUESTION { fprintf(outfd, " %s ", $2); } expression COLON { fprintf(outfd, " %s ", $5); } expression
 ;
 
 %%
 
 int main(int argc, char **argv)
 {
+    FILE *infd = NULL;
+
+    if (argc >= 3)
+    {
+        infd = fopen(argv[1], "rt");
+        if (!infd)
+        {
+            fprintf(stderr, "No se pudo abrir el archivo %s\n", argv[1]);
+            return EXIT_FAILURE;
+        }
+        
+        outfd = fopen(argv[2], "wt");
+        if (!outfd)
+        {
+            fprintf(stderr, "No se pudo abrir el archivo %s\n", argv[2]);
+            return EXIT_FAILURE;
+        }
+    } else
+    {
+        fprintf(stderr, "Uso: %s <archivo entrada C> <archivo salida Groovy>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    yyin = infd;
     yyparse();
 
+    fclose(infd);
+    fclose(outfd);
     return 0;
 }
 
 int yyerror(char *s)
 {
-    printf("\nError on line %d: %s\n", line, s);
+    printf("\nError en la linea %d: %s\n", line, s);
 
     return 0;
 }

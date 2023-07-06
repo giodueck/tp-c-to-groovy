@@ -2,6 +2,7 @@
 #include "parser.tab.h"
 
 int line = 1;
+extern FILE *outfd;
 
 int yywrap(void) {}
 %}
@@ -26,8 +27,8 @@ char    '(\\.|[^'])'
 }
 
 [\ ]            { }
-[\t]            { printf("\t"); }
-[\n]            { line++; printf("\n"); }
+[\t]            { fprintf(outfd, "\t"); }
+[\n]            { line++; fprintf(outfd, "\n"); }
 
 "#"             { return HASH; }
 "include"       { return PP_INCLUDE; }
