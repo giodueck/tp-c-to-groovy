@@ -106,12 +106,13 @@ statement
 :   statement_no_end ENDS
 |   ENDS
 |   loop
+|   conditional_statement
 ;
 
 conditional_statement
 : IF OPP {printf("if ( ");} expression ')' CLP block ELSE {printf("else ");} block
 | IF OPP {printf("if ( ");} expression ')' CLP block
-| IF OPP {printf("if ( ");} expression error '{' {yyerror("Se espera un simbolo ')' en la expresion 'if'.");}
+| IF OPP {printf("if ( ");} expression error {yyerror("Se espera un simbolo ')' en la expresion 'if'.");}
 //| SWITCH '(' expression ')' block
 ;
 
