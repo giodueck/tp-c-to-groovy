@@ -41,8 +41,8 @@ int main()
 
     printf("%d! = %d\n", n, fact);
 
-    const int m = 8;
-    printf("%d! = %d\n", m, factorial(m));
+    const int n = 8;
+    printf("%d! = %d\n", n, factorial(n));
 
     noop(1, 2, 3);
 

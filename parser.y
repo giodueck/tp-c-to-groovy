@@ -293,18 +293,18 @@ statement
 ;
 
 conditional_statement
-:   IF { fprintf(outfd, "if "); } condition block else_statement
+:   IF { fprintf(outfd, "if "); } condition { enter_scope(); } block else_statement
 //| SWITCH '(' expression ')' block
 ;
 
 else_statement
 :
-|   ELSE {fprintf(outfd, "else ");} block
+|   ELSE { fprintf(outfd, "else "); enter_scope(); } block
 ;
 
 statement_no_end
 :   RETURN { fprintf(outfd, "return "); } expression
-|   RETURN { fprintf(outfd, "return"); dump_symbols(); printf("\n"); }
+|   RETURN { fprintf(outfd, "return"); }
 |   CONTINUE { (continueable) ? fprintf(outfd, "continue") : yyerror("No puede usarse \"continue\" fuera de un ciclo"); }
 |   BREAK { (continueable) ? fprintf(outfd, "break") : yyerror("No puede usarse \"break\" fuera de un ciclo o un switch"); }
 |   print
@@ -320,12 +320,12 @@ print
 ;
 
 loop
-:   WHILE { fprintf(outfd, "while "); } condition block_continueable
-|   FOR OPP { fprintf(outfd, "for ("); } variable_declaration ENDS { fprintf(outfd, "; "); } expression ENDS { fprintf(outfd, "; "); } expression CLP { fprintf(outfd, ")"); } block_continueable
+:   WHILE { fprintf(outfd, "while "); enter_scope(); } condition block_continueable
+|   FOR OPP { fprintf(outfd, "for ("); enter_scope(); } variable_declaration ENDS { fprintf(outfd, "; "); } expression ENDS { fprintf(outfd, "; "); } expression CLP { fprintf(outfd, ")"); } block_continueable
 ;
 
 do_loop
-:   DO { fprintf(outfd, "do "); } block_continueable WHILE { fprintf(outfd, " while "); } condition
+:   DO { fprintf(outfd, "do "); enter_scope(); } block_continueable WHILE { fprintf(outfd, " while "); } condition
 ;
 
 block_breakable
@@ -337,8 +337,8 @@ block_continueable
 ;
 
 block
-:   { fprintf(outfd, "{"); } statement { fprintf(outfd, "}"); }
-|   OPCB { fprintf(outfd, "{"); } statement_sequence CLCB { fprintf(outfd, "} "); }
+:   { fprintf(outfd, "{"); } statement { fprintf(outfd, "}"); exit_scope(); }
+|   OPCB { fprintf(outfd, "{"); } statement_sequence CLCB { fprintf(outfd, "} "); exit_scope(); }
 ;
 
 condition
@@ -374,8 +374,8 @@ identifier_declaration
 ;
 
 variable_declaration
-:   identifier_declaration
-|   identifier_declaration assign expression
+:   identifier_declaration { add_symbol(s.name, ST_VARIABLE, s.data_type, s.is_const); }
+|   identifier_declaration { add_symbol(s.name, ST_VARIABLE, s.data_type, s.is_const); } assign expression
 |   variable_declaration COMMA IDENTIFIER {yyerror("No se admiten declaraciones multiples");}
 ;
 
@@ -624,7 +624,7 @@ int main(int argc, char **argv)
 
 int yyerror(char *s)
 {
-    printf("\nError en la linea %d: %s\n", line, s);
+    printf("\nError linea %d: %s\n", line, s);
 
     return 0;
 }
@@ -664,6 +664,26 @@ int get_scope()
 // Add new symbol to scope. If already defined, calls yyerror
 void add_symbol(char *name, int symbol_type, int data_type, int is_const)
 {
+    int sc = test_symbol(name);
+    if (sc != -1)
+    {
+        node s = get_symbol(name);
+        if (s.symbol_type == ST_FUNCTION)
+        {
+            char msg[BUFSIZ];
+            sprintf(msg, "Simbolo %s ya definido como funcion", name);
+            yyerror(msg);
+            return;
+        }
+        if (sc == get_scope())
+        {
+            char msg[BUFSIZ];
+            sprintf(msg, "Simbolo %s ya definido en este scope", name);
+            yyerror(msg);
+            return;
+        }
+    }
+
     node *table = &(symbol_table.array[symbol_table.top - 1]);
     node *new_symbol = malloc(sizeof(node));
     *new_symbol = *table;
@@ -686,7 +706,7 @@ void add_parameter(char *function, char *name, int symbol_type, int data_type, i
     if (test_parameter(function, name) != -1)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Parametro %s repetido\n", name);
+        sprintf(msg, "Parametro %s ya definido en la funcion %s", name, function);
         yyerror(msg);
         return;
     }
@@ -724,7 +744,7 @@ node get_symbol(char *name)
     if (!found)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Simbolo %s no definido\n", name);
+        sprintf(msg, "Simbolo %s no definido", name);
         yyerror(msg);
         return (node){0};
     }
@@ -779,7 +799,7 @@ node *get_symbol_ptr(char *name)
     if (!found)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Simbolo %s no definido\n", name);
+        sprintf(msg, "Simbolo %s no definido", name);
         yyerror(msg);
         return NULL;
     }
@@ -796,7 +816,7 @@ node get_parameter(char *function, int index)
         if (param->name == NULL)
         {
             char msg[BUFSIZ];
-            sprintf(msg, "Too many arguments for fucntion %s\n", function);
+            sprintf(msg, "Too many arguments for fucntion %s", function);
             yyerror(msg);
             return (node){0};
         }
