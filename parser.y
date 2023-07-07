@@ -131,6 +131,9 @@ node get_parameter(char *function, int index);
 // Returns index if parameter exists, -1 if it doesn't
 int test_parameter(char *function, char *name);
 
+// Returns the number of parameters that a function takes
+int get_parameter_count(char *function);
+
 // debug
 void dump_symbols()
 {
@@ -172,6 +175,8 @@ int continueable = 0;
 
 char *function_name = NULL;
 node s = (node){0};
+int arg_count = 0;
+int flag_count_args = 0;
 
 FILE *outfd = NULL;
 %}
@@ -258,7 +263,7 @@ function_body
 ;
 
 function_call
-:   IDENTIFIER OPP { fprintf(outfd, "%s(", $1); } argument_list CLP { fprintf(outfd, ")"); }
+:   IDENTIFIER OPP { get_symbol($1); fprintf(outfd, "%s(", $1); function_name = $1; flag_count_args = 1; arg_count = 0; } argument_list CLP { fprintf(outfd, ")"); flag_count_args = 0; if (get_parameter_count(function_name) != arg_count) {char msg[BUFSIZ]; sprintf(msg, "Llamada a %s con numero incorrecto de argumentos: %d, esperaba %d", function_name, arg_count, get_parameter_count(function_name)); yyerror(msg); } }
 ;
 
 parameters
@@ -380,7 +385,7 @@ variable_declaration
 ;
 
 assignment
-:   IDENTIFIER { fprintf(outfd, "%s", $1); } assign_op expression
+:   IDENTIFIER { get_symbol($1); fprintf(outfd, "%s", $1); } assign_op expression
 //|   assignment COMMA {yyerror("No se admiten asignaciones multiples");} IDENTIFIER
 ;
 
@@ -410,8 +415,8 @@ expression
 ;
 
 expression_list
-:   expression
-|   expression COMMA { fprintf(outfd, ", "); } expression_list
+:   expression { if (flag_count_args) arg_count++; }
+|   expression COMMA { fprintf(outfd, ", "); if (flag_count_args) arg_count++; } expression_list
 ;
 
 expression_p
@@ -427,9 +432,9 @@ literal
 ;
 
 value
-:   IDENTIFIER { fprintf(outfd, $1); }
-|   unary_pre IDENTIFIER { fprintf(outfd, $2); }
-|   IDENTIFIER { fprintf(outfd, $1); } unary_post
+:   IDENTIFIER { get_symbol($1); fprintf(outfd, $1); }
+|   unary_pre IDENTIFIER { get_symbol($2); fprintf(outfd, $2); }
+|   IDENTIFIER { get_symbol($1); fprintf(outfd, $1); } unary_post
 |   literal
 ;
 
@@ -689,7 +694,7 @@ void add_symbol(char *name, int symbol_type, int data_type, int is_const)
     *new_symbol = *table;
     *table = init_symbol(name, symbol_type, data_type, is_const);
     (*table).next = new_symbol;
-    if (symbol_type == ST_FUNCTION)
+    if (symbol_type == ST_FUNCTION || symbol_type == ST_STRUCT)
     {
         table->args = malloc(sizeof(node));
         *table->args = init_symbol(NULL, ST_NULL, VOID, 0);
@@ -706,7 +711,7 @@ void add_parameter(char *function, char *name, int symbol_type, int data_type, i
     if (test_parameter(function, name) != -1)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Parametro %s ya definido en la funcion %s", name, function);
+        sprintf(msg, "Parametro %s ya definido en la %s %s", name, (f->symbol_type == ST_FUNCTION) ? "funcion" : "estructura", function);
         yyerror(msg);
         return;
     }
@@ -830,7 +835,10 @@ node get_parameter(char *function, int index)
 // Returns index if parameter exists, -1 if it doesn't
 int test_parameter(char *function, char *name)
 {
-    node n = *get_symbol(function).args;
+    node n = get_symbol(function);
+    if (!n.name)
+        return -1;
+    n = *get_symbol(function).args;
     int i = 0;
     while (n.name != NULL)
     {
@@ -845,4 +853,30 @@ int test_parameter(char *function, char *name)
     }
 
     return -1;
+}
+
+// Returns the number of parameters that a function takes
+int get_parameter_count(char *function)
+{
+    node n = get_symbol(function);
+    if (!n.name)
+        return 0;
+    else if (n.symbol_type != ST_FUNCTION && n.symbol_type != ST_STRUCT)
+    {
+        char msg[BUFSIZ];
+        sprintf(msg, "Simbolo %s no es una funcion", function);
+        yyerror(msg);
+        return 0;
+    }
+    n = *get_symbol(function).args;
+    int i = 0;
+    while (n.name != NULL)
+    {
+        if (n.next == NULL)
+            break;
+        n = *n.next;
+        i++;
+    }
+
+    return i;
 }
