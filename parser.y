@@ -147,10 +147,11 @@ void dump_symbols()
             for (int i = 0; i < level; i++) printf("  ");
             printf("%s\n", s.name);
 
-            if (s.symbol_type == ST_FUNCTION)
+            if (s.symbol_type == ST_FUNCTION || s.symbol_type == ST_STRUCT)
             {
                 for (int i = 0; i < level; i++) printf("  ");
-                printf(" params: ");
+                if (s.symbol_type == ST_FUNCTION) printf(" params: ");
+                if (s.symbol_type == ST_STRUCT) printf(" fields: ");
                 node a = *s.args;
                 while (a.name)
                 {
@@ -288,7 +289,7 @@ function_body
 ;
 
 function_call
-:   IDENTIFIER OPP { get_symbol($1); fprintf(outfd, "%s(", $1); function_name = $1; flag_count_args = 1; arg_count = 0; } argument_list CLP { fprintf(outfd, ")"); flag_count_args = 0; if (get_parameter_count(function_name) != arg_count) {char msg[BUFSIZ]; sprintf(msg, "Llamada a %s con numero incorrecto de argumentos: %d, esperaba %d", function_name, arg_count, get_parameter_count(function_name)); yyerror(msg); } }
+:   IDENTIFIER OPP { get_symbol($1); fprintf(outfd, "%s(", $1); function_name = $1; flag_count_args = 1; arg_count = 0; } argument_list CLP { fprintf(outfd, ")"); flag_count_args = 0; if (get_parameter_count(function_name) != arg_count) {char msg[BUFSIZ]; sprintf(msg, "Llamada a '%s' con numero incorrecto de argumentos: %d, esperaba %d", function_name, arg_count, get_parameter_count(function_name)); yyerror(msg); } }
 ;
 
 parameters
@@ -462,9 +463,10 @@ value
 |   unary_pre IDENTIFIER { get_symbol($2); fprintf(outfd, $2); }
 |   IDENTIFIER { get_symbol($1); fprintf(outfd, $1); } unary_post
 |   literal
-|   IDENTIFIER DOT IDENTIFIER { s = get_symbol($1); if (s.data_type == STRUCT) s = get_field($1, $3); fprintf(outfd, "%s.%s", $1, $3); }
-|   unary_pre IDENTIFIER DOT IDENTIFIER { get_symbol($2); fprintf(outfd, $2); }
-|   IDENTIFIER DOT IDENTIFIER { get_symbol($1); fprintf(outfd, $1); } unary_post
+|   IDENTIFIER DOT IDENTIFIER { s = get_symbol($1); if (s.data_type == STRUCT) { s = get_field($1, $3); fprintf(outfd, "%s.%s", $1, $3); } else { char msg[BUFSIZ]; sprintf(msg, "'%s' no es una estructura, no puede usarse el operador '.'", $1); yyerror(msg); } }
+|   unary_pre IDENTIFIER DOT IDENTIFIER { s = get_symbol($2); if (s.data_type == STRUCT) { s = get_field($2, $4); fprintf(outfd, "%s.%s", $2, $4); } else { char msg[BUFSIZ]; sprintf(msg, "'%s' no es una estructura, no puede usarse el operador '.'", $2); yyerror(msg); } }
+|   IDENTIFIER DOT IDENTIFIER { s = get_symbol($1); if (s.data_type == STRUCT) { s = get_field($1, $3); fprintf(outfd, "%s.%s", $1, $3); } else { char msg[BUFSIZ]; sprintf(msg, "'%s' no es una estructura, no puede usarse el operador '.'", $1); yyerror(msg); } } 
+                                unary_post
 ;
 
 expression_0
@@ -654,14 +656,14 @@ int main(int argc, char **argv)
         infd = fopen(argv[1], "rt");
         if (!infd)
         {
-            fprintf(stderr, "No se pudo abrir el archivo %s\n", argv[1]);
+            fprintf(stderr, "No se pudo abrir el archivo '%s'\n", argv[1]);
             return EXIT_FAILURE;
         }
         
         outfd = fopen(argv[2], "wt");
         if (!outfd)
         {
-            fprintf(stderr, "No se pudo abrir el archivo %s\n", argv[2]);
+            fprintf(stderr, "No se pudo abrir el archivo '%s'\n", argv[2]);
             return EXIT_FAILURE;
         }
     } else
@@ -732,14 +734,14 @@ void add_symbol(char *name, int symbol_type, int data_type, int is_const)
         if (s.symbol_type == ST_FUNCTION)
         {
             char msg[BUFSIZ];
-            sprintf(msg, "Simbolo %s ya definido como funcion", name);
+            sprintf(msg, "Simbolo '%s' ya definido como funcion", name);
             yyerror(msg);
             return;
         }
         if (sc == get_scope())
         {
             char msg[BUFSIZ];
-            sprintf(msg, "Simbolo %s ya definido en este scope", name);
+            sprintf(msg, "Simbolo '%s' ya definido en este ambito", name);
             yyerror(msg);
             return;
         }
@@ -767,7 +769,7 @@ void add_parameter(char *function, char *name, int symbol_type, int data_type, i
     if (test_parameter(function, name) != -1)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Parametro %s ya definido en la %s %s", name, (f->symbol_type == ST_FUNCTION) ? "funcion" : "estructura", function);
+        sprintf(msg, "Parametro '%s' ya definido en la funcion '%s'", name, function);
         yyerror(msg);
         return;
     }
@@ -805,7 +807,7 @@ node get_symbol(char *name)
     if (!found)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Simbolo %s no definido", name);
+        sprintf(msg, "Simbolo '%s' no definido", name);
         yyerror(msg);
         return (node){0};
     }
@@ -860,7 +862,7 @@ node *get_symbol_ptr(char *name)
     if (!found)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Simbolo %s no definido", name);
+        sprintf(msg, "Simbolo '%s' no definido", name);
         yyerror(msg);
         return NULL;
     }
@@ -877,7 +879,7 @@ node get_parameter(char *function, int index)
         if (param->name == NULL)
         {
             char msg[BUFSIZ];
-            sprintf(msg, "Too many arguments for fucntion %s", function);
+            sprintf(msg, "Demasiados argumentos para la funcion '%s'", function);
             yyerror(msg);
             return (node){0};
         }
@@ -920,7 +922,7 @@ int get_parameter_count(char *function)
     else if (n.symbol_type != ST_FUNCTION && n.symbol_type != ST_STRUCT)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Simbolo %s no es una funcion", function);
+        sprintf(msg, "Simbolo '%s' no es una funcion", function);
         yyerror(msg);
         return 0;
     }
@@ -962,7 +964,7 @@ void add_field(char *structure, char* name, int symbol_type, int data_type, int 
     if (test_parameter(structure, name) != -1)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Campo %s ya definido en la estructura %s", name);
+        sprintf(msg, "Campo '%s' ya definido en la estructura '%s'", name);
         yyerror(msg);
         return;
     }
@@ -979,7 +981,7 @@ void add_field(char *structure, char* name, int symbol_type, int data_type, int 
 node get_field(char *structure, char *field_name){
     node *field = get_symbol_ptr(structure)->args;
 
-    while (field)
+    while (field->name != NULL)
     {
         if (strcmp(field->name, field_name) == 0)
             return *field;
@@ -990,7 +992,7 @@ node get_field(char *structure, char *field_name){
     // If while finish and there's no return, get a error message that field does not exist
     char msg[BUFSIZ];
     //No such property: name for class: Person
-    sprintf(msg, "No such property: '%s' for struct: '%s'", field_name, structure);
+    sprintf(msg, "No existe el campo '%s' para la estructura '%s'", field_name, structure);
     yyerror(msg);
 
     return (node){0};
@@ -1004,7 +1006,7 @@ int get_field_count(char *structure){
     else if (n.symbol_type != ST_STRUCT)
     {
         char msg[BUFSIZ];
-        sprintf(msg, "Simbolo %s no es una estructura", structure);
+        sprintf(msg, "Simbolo '%s' no es una estructura", structure);
         yyerror(msg);
         return 0;
     }

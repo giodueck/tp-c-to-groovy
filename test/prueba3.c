@@ -56,6 +56,10 @@ int main()
     some_fact.n = 0;
     some_fact.res = factorial(some_fact.n);
     printf("%d! = %d\n", some_fact.n, some_fact.res);
+    
+    some_fact.n = ++some_fact.res;
+    some_fact.res = factorial(some_fact.n);
+    printf("%d! = %d\n", some_fact.n, some_fact.res);
 
     return 0;
 }
