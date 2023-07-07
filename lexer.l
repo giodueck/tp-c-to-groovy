@@ -62,6 +62,7 @@ char    '(\\.|[^'])'
 "volatile"      { return VOLATILE; }
 "extern"        { return EXTERN; }
 "bool"          { return BOOL; }
+"typedef"       { return TYPEDEF; }
 
 "true"          { return BOOL_TRUE; }
 "false"         { return BOOL_FALSE; }

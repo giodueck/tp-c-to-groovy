@@ -167,6 +167,26 @@ void dump_symbols()
     }
 }
 
+/*Useful functions for structures*/
+
+//Create and enter a new class scope, with the formal fields defined in the new scope
+void enter_structure(char *name);
+
+//Add new formal field to a class
+void add_field(char *structure, char* name, int symbol_type, int data_type, int is_const);
+
+// Returns a field's structure symbol. If not defined, calls yyerror
+node get_field(char *structure, char *field_name);
+
+// Returns index if field exists, -1 if it doesn't (creo que no necesito)
+//int test_field(char *function, char *name);
+
+// Returns the number of field that a structure has
+int get_field_count(char *structure);
+
+// Return the name structure, if the structure name doesn't exist, calls yerror
+node get_structure(char *structure, char *struct_name);
+
 /* GLOBAL VARIABLES */
 extern int line;
 
@@ -236,6 +256,7 @@ pp_library_to_ignore
 
 global_statement
 :   function_definition
+|   structure_definition
 ;
 
 global_scope
@@ -362,6 +383,7 @@ variable_type
 |   FLOAT    { fprintf(outfd, "float "); s.data_type = FLOAT; }
 |   DOUBLE   { fprintf(outfd, "double "); s.data_type = DOUBLE; }
 |   BOOL     { fprintf(outfd, "boolean "); s.data_type = BOOL; }
+|   STRUCT IDENTIFIER { fprintf(outfd, "struct "); s.data_type = STRUCT; /*get_structure_name*/ }
 ;
 
 function_type
@@ -586,6 +608,33 @@ logical_op_11
 ternary
 :   expression QUESTION { fprintf(outfd, " ? "); } expression COLON { fprintf(outfd, " : "); } expression
 ;
+
+/*structures*/
+
+structure_definition
+:   STRUCT IDENTIFIER { fprintf(outfd, "class %s", $2); function_name = $2; add_symbol(function_name, ST_STRUCT, STRUCT, 0);} structure_fields ENDS
+|   TYPEDEF STRUCT IDENTIFIER { fprintf(outfd, "class %s", $3); function_name = $3; add_symbol(function_name, ST_STRUCT, STRUCT, 0);} structure_fields ENDS
+;
+
+structure_fields
+:   OPCB { fprintf(outfd, "{"); } structure_field_list CLCB { fprintf(outfd, "}"); exit_scope(); } ENDS
+//|   error { yyerror("Estructura sin propiedades definidas");}
+;
+
+structure_field_list
+:   structure_field 
+|   structure_field_list structure_field 
+;
+
+structure_field
+:   identifier_declaration {add_field(function_name, s.name, ST_VARIABLE, s.data_type, s.is_const); } ENDS
+;
+
+/*structure_assignation
+:   STRUCT IDENTIFIER { }
+
+structure_call
+: */  
 
 %%
 
@@ -880,3 +929,91 @@ int get_parameter_count(char *function)
 
     return i;
 }
+
+
+/*--------- Structure function's implemantation -------- */
+
+//Create and enter a new class scope, with the formal fields defined in the new scope
+void enter_structure(char *name){
+    //Get the arguments of the function from the symbol table 
+    node *a = get_symbol(name).args;
+    enter_scope();
+
+    while (a->name)
+    {
+        add_symbol(a->name, a->symbol_type, a->data_type, a->is_const);
+        a = a->next;
+    }
+}
+
+//Add new formal field to a class
+void add_field(char *structure, char* name, int symbol_type, int data_type, int is_const){
+    node *f = get_symbol_ptr(structure);
+
+    node *table = f->args;
+
+    if (test_parameter(structure, name) != -1)
+    {
+        char msg[BUFSIZ];
+        sprintf(msg, "Campo %s ya definido en la estructura %s", name);
+        yyerror(msg);
+        return;
+    }
+
+    while (table->next)
+        table = table->next;
+    node *new_symbol = malloc(sizeof(node));
+    *new_symbol = *table;
+    *table = init_symbol(name, symbol_type, data_type, is_const);
+    (*table).next = new_symbol;
+}
+
+// Returns a field's structure symbol. If not defined, calls yyerror
+node get_field(char *structure, char *field_name){
+    node *field = get_symbol_ptr(structure)->args;
+
+    while (field)
+    {
+        if (strcmp(field->name, field_name) == 0)
+            return *field;
+
+        field = field->next;
+    }
+
+    // If while finish and there's no return, get a error message that field does not exist
+    char msg[BUFSIZ];
+    //No such property: name for class: Person
+    sprintf(msg, "No such property: '%s' for struct: '%s'", field_name, structure);
+    yyerror(msg);
+
+    return (node){0};
+}
+
+// Returns the number of field that a structure has
+int get_field_count(char *structure){
+    node n = get_symbol(structure);
+    if (!n.name)
+        return 0;
+    else if (n.symbol_type != ST_STRUCT)
+    {
+        char msg[BUFSIZ];
+        sprintf(msg, "Simbolo %s no es una estructura", structure);
+        yyerror(msg);
+        return 0;
+    }
+    n = *get_symbol(structure).args;
+    int i = 0;
+    while (n.name != NULL)
+    {
+        if (n.next == NULL)
+            break;
+        n = *n.next;
+        i++;
+    }
+
+    return i;
+}
+
+/*char* get_structure(char *structure, char *struct_name){
+
+}*/
