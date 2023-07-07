@@ -194,9 +194,11 @@ int breakable = 0;
 int continueable = 0;
 
 char *function_name = NULL;
+char *struct_name = NULL;
 node s = (node){0};
 int arg_count = 0;
 int flag_count_args = 0;
+int flag_in_struct = 0;
 
 FILE *outfd = NULL;
 %}
@@ -232,6 +234,8 @@ FILE *outfd = NULL;
 %token AND OR NOT
 
 %token QUESTION COLON
+
+%token DOT
 
 %%
 
@@ -383,7 +387,7 @@ variable_type
 |   FLOAT    { fprintf(outfd, "float "); s.data_type = FLOAT; }
 |   DOUBLE   { fprintf(outfd, "double "); s.data_type = DOUBLE; }
 |   BOOL     { fprintf(outfd, "boolean "); s.data_type = BOOL; }
-|   STRUCT IDENTIFIER { fprintf(outfd, "struct "); s.data_type = STRUCT; /*get_structure_name*/ }
+|   STRUCT IDENTIFIER { fprintf(outfd, "%s ", $2); s.data_type = STRUCT; node temp_s = get_symbol($2); s.args = temp_s.args; struct_name = $2; }
 ;
 
 function_type
@@ -392,7 +396,7 @@ function_type
 ;
 
 identifier_declaration
-:   variable_type IDENTIFIER                { fprintf(outfd, $2); s.name = $2; s.is_const = 0; }
+:   variable_type IDENTIFIER                { fprintf(outfd, $2); if (s.data_type == STRUCT) fprintf(outfd, " = new %s()", struct_name); s.name = $2; s.is_const = 0; }
 |   type_qualifier variable_type IDENTIFIER { fprintf(outfd, $3); s.name = $3; }
 |   UNSIGNED INT IDENTIFIER                 { fprintf(outfd, "int %s", $3); s.name = $3; s.data_type = INT; s.is_const = 0; }
 |   UNSIGNED CHAR IDENTIFIER                { fprintf(outfd, "char %s", $3); s.name = $3; s.data_type = CHAR; s.is_const = 0; }
@@ -401,14 +405,14 @@ identifier_declaration
 ;
 
 variable_declaration
-:   identifier_declaration { add_symbol(s.name, ST_VARIABLE, s.data_type, s.is_const); }
-|   identifier_declaration { add_symbol(s.name, ST_VARIABLE, s.data_type, s.is_const); } assign expression
+:   identifier_declaration { add_symbol(s.name, ST_VARIABLE, s.data_type, s.is_const); if (s.data_type == STRUCT) { get_symbol_ptr(s.name)->args = s.args; } }
+|   identifier_declaration { add_symbol(s.name, ST_VARIABLE, s.data_type, s.is_const); if (s.data_type == STRUCT) { yyerror("No admite asignar a estructuras al declarar"); }} assign expression
 |   variable_declaration COMMA IDENTIFIER {yyerror("No se admiten declaraciones multiples");}
 ;
 
 assignment
 :   IDENTIFIER { get_symbol($1); fprintf(outfd, "%s", $1); } assign_op expression
-//|   assignment COMMA {yyerror("No se admiten asignaciones multiples");} IDENTIFIER
+|   IDENTIFIER DOT IDENTIFIER { s = get_symbol($1); if (s.data_type == STRUCT) s = get_field($1, $3); fprintf(outfd, "%s.%s", $1, $3); } assign_op expression
 ;
 
 assign
@@ -458,6 +462,9 @@ value
 |   unary_pre IDENTIFIER { get_symbol($2); fprintf(outfd, $2); }
 |   IDENTIFIER { get_symbol($1); fprintf(outfd, $1); } unary_post
 |   literal
+|   IDENTIFIER DOT IDENTIFIER { s = get_symbol($1); if (s.data_type == STRUCT) s = get_field($1, $3); fprintf(outfd, "%s.%s", $1, $3); }
+|   unary_pre IDENTIFIER DOT IDENTIFIER { get_symbol($2); fprintf(outfd, $2); }
+|   IDENTIFIER DOT IDENTIFIER { get_symbol($1); fprintf(outfd, $1); } unary_post
 ;
 
 expression_0
@@ -612,22 +619,22 @@ ternary
 /*structures*/
 
 structure_definition
-:   STRUCT IDENTIFIER { fprintf(outfd, "class %s", $2); function_name = $2; add_symbol(function_name, ST_STRUCT, STRUCT, 0); enter_structure($2); } structure_fields ENDS
-|   TYPEDEF STRUCT IDENTIFIER { fprintf(outfd, "class %s", $3); function_name = $3; add_symbol(function_name, ST_STRUCT, STRUCT, 0); enter_structure($3); } structure_fields ENDS
+:   STRUCT IDENTIFIER { fprintf(outfd, "class %s", $2); struct_name = $2; add_symbol(struct_name, ST_STRUCT, STRUCT, 0); enter_structure($2); } structure_fields ENDS
+|   TYPEDEF STRUCT IDENTIFIER { fprintf(outfd, "class %s", $3); struct_name = $3; add_symbol(struct_name, ST_STRUCT, STRUCT, 0); enter_structure($3); } structure_fields ENDS
 ;
 
 structure_fields
-:   OPCB { fprintf(outfd, "{"); } structure_field_list CLCB { fprintf(outfd, "}"); exit_scope(); }
+:   OPCB { fprintf(outfd, "{"); flag_in_struct = 1; } structure_field_list CLCB { fprintf(outfd, "}"); exit_scope(); flag_in_struct = 0; }
 //|   error { yyerror("Estructura sin propiedades definidas");}
 ;
 
 structure_field_list
-:   structure_field 
+:   structure_field
 |   structure_field_list structure_field 
 ;
 
 structure_field
-:   identifier_declaration {add_field(function_name, s.name, ST_VARIABLE, s.data_type, s.is_const); } ENDS
+:   identifier_declaration {add_field(struct_name, s.name, ST_VARIABLE, s.data_type, s.is_const); } ENDS
 ;
 
 /*structure_assignation
@@ -931,7 +938,7 @@ int get_parameter_count(char *function)
 }
 
 
-/*--------- Structure function's implemantation -------- */
+/*--------- Structure function's implementation -------- */
 
 //Create and enter a new class scope, with the formal fields defined in the new scope
 void enter_structure(char *name){
@@ -968,7 +975,7 @@ void add_field(char *structure, char* name, int symbol_type, int data_type, int 
     (*table).next = new_symbol;
 }
 
-// Returns a field's structure symbol. If not defined, calls yyerror
+// Returns a structure's field symbol. If not defined, calls yyerror
 node get_field(char *structure, char *field_name){
     node *field = get_symbol_ptr(structure)->args;
 

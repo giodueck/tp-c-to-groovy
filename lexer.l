@@ -75,6 +75,7 @@ char    '(\\.|[^'])'
 "]"             { return CLB; }
 ";"             { return ENDS; }
 ","             { return COMMA; }
+"."             { return DOT; }
 
 "<="            { return LE; }
 ">="            { return GE; }
