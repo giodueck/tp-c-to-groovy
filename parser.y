@@ -612,12 +612,12 @@ ternary
 /*structures*/
 
 structure_definition
-:   STRUCT IDENTIFIER { fprintf(outfd, "class %s", $2); function_name = $2; add_symbol(function_name, ST_STRUCT, STRUCT, 0);} structure_fields ENDS
-|   TYPEDEF STRUCT IDENTIFIER { fprintf(outfd, "class %s", $3); function_name = $3; add_symbol(function_name, ST_STRUCT, STRUCT, 0);} structure_fields ENDS
+:   STRUCT IDENTIFIER { fprintf(outfd, "class %s", $2); function_name = $2; add_symbol(function_name, ST_STRUCT, STRUCT, 0); enter_structure($2); } structure_fields ENDS
+|   TYPEDEF STRUCT IDENTIFIER { fprintf(outfd, "class %s", $3); function_name = $3; add_symbol(function_name, ST_STRUCT, STRUCT, 0); enter_structure($3); } structure_fields ENDS
 ;
 
 structure_fields
-:   OPCB { fprintf(outfd, "{"); } structure_field_list CLCB { fprintf(outfd, "}"); exit_scope(); } ENDS
+:   OPCB { fprintf(outfd, "{"); } structure_field_list CLCB { fprintf(outfd, "}"); exit_scope(); }
 //|   error { yyerror("Estructura sin propiedades definidas");}
 ;
 

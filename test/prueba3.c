@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+struct Something {
+    int a;
+    char b;
+};
+
 int factorial(long n)
 {
     if (n <= 1)
