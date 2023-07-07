@@ -9,7 +9,7 @@ int factorial(long n)
         return n * factorial(n - 1);
 }
 
-void noop()
+void noop(int a, int b, int c)
 {
     printf("\n");
     return;
@@ -44,7 +44,7 @@ int main()
     const int m = 8;
     printf("%d! = %d\n", m, factorial(m));
 
-    noop();
+    noop(1, 2, 3);
 
     return 0;
 }
