@@ -321,6 +321,7 @@ statement
 |   ENDS
 |   loop
 |   conditional_statement
+|   statement_no_end error ENDS { yyerror("Falta un ';' al final de la sentencia"); }
 ;
 
 conditional_statement
@@ -408,7 +409,7 @@ identifier_declaration
 variable_declaration
 :   identifier_declaration { add_symbol(s.name, ST_VARIABLE, s.data_type, s.is_const); if (s.data_type == STRUCT) { get_symbol_ptr(s.name)->args = s.args; } }
 |   identifier_declaration { add_symbol(s.name, ST_VARIABLE, s.data_type, s.is_const); if (s.data_type == STRUCT) { yyerror("No admite asignar a estructuras al declarar"); }} assign expression
-|   variable_declaration COMMA IDENTIFIER {yyerror("No se admiten declaraciones multiples");}
+|   variable_declaration COMMA error ENDS { yyerror("No se admiten declaraciones multiples"); yyerrok; }
 ;
 
 assignment
