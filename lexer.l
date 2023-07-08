@@ -1,10 +1,13 @@
 %{
 #include "parser.tab.h"
+#include <string.h>
+#include <stdio.h>
 
 int line = 1;
 extern FILE *outfd;
 
 int yywrap(void) {}
+int yyerror(char *msg);
 %}
 
 id      [a-zA-Z_][a-zA-Z_0-9]*
@@ -117,6 +120,17 @@ char    '(\\.|[^'])'
 
 "?"             { return QUESTION; }
 ":"             { return COLON; }
+
+
+"switch"|"case"|"default"   { yyerror("\"switch\", \"case\" y \"default\" no son admitidos"); }
+
+"signed"|"static"|"volatile"|"extern"|"auto"|"register" { char msg[BUFSIZ]; sprintf(msg, "\"%s\" no es un calificador de variable admitido", yytext); yyerror(msg); }
+
+"goto"          { yyerror("\"goto\" no es admitido"); }
+
+"enum"|"union"  { char msg[BUFSIZ]; sprintf(msg, "\"%s\" no es un tipo de estructura admitida", yytext); yyerror(msg); }
+
+"sizeof"        { yyerror("\"sizeof\" no es un operador admitido"); }
 
 {id}            { yylval.str = strdup(yytext); return IDENTIFIER; }
 {integer}       { yylval.str = strdup(yytext); return LIT_INT; }
